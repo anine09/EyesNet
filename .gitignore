@@ -3,3 +3,5 @@ gsas2full/
 commit_eyesnet_docker.sh
 Dockerfile
 run_eyesnet_docker.sh
+generate_xrd_simulation/gen_data.*
+.vscode/
