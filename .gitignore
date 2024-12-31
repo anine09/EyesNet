@@ -1,0 +1,5 @@
+dataset/
+gsas2full/
+commit_eyesnet_docker.sh
+Dockerfile
+run_eyesnet_docker.sh
