@@ -5,3 +5,4 @@ Dockerfile
 run_eyesnet_docker.sh
 generate_xrd_simulation/gen_data.*
 .vscode/
+__pycache__/
