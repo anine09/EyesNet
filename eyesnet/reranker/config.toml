@@ -1,0 +1,39 @@
+# general
+learning_rate = ""
+clip_hidden_dim = ""
+
+# xrd_encoder, Byte Latent Transformer
+[blt]
+embedding_dim = ""
+vocab_size = ""
+n_embd = ""
+n_head = ""
+n_layers_encoder = ""
+n_layers_latent = ""
+dropout = ""
+patch_size = ""
+hash_sizes = ""
+hash_table_size = ""
+block_size = ""
+
+# crystal_encoder, GotenNet
+[gotennet]
+embedding_dim = ""
+dim = ""
+depth = ""
+max_degree = ""
+dim_edge_refinement = ""
+accept_embed = ""
+num_atoms = ""
+heads = ""
+dim_head = ""
+cutoff_radius = ""
+max_neighbors = ""
+mlp_expansion_factor = ""
+edge_init_mlp_expansion_factor = ""
+ff_kwargs = ""
+return_coors = ""
+proj_invariant_dim = ""
+final_norm = ""
+add_value_residual = ""
+num_residual_streams = ""
