@@ -1,0 +1,3 @@
+[submodule "GSAS-II"]
+	path = GSAS-II
+	url = https://github.com/AdvancedPhotonSource/GSAS-II
