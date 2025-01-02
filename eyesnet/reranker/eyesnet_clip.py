@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from xrd_encoder.ByteLatentTransformer import ByteLatentTransformer
 from gotennet_pytorch import GotenNet
+from xrd_encoder.ByteLatentTransformer import ByteLatentTransformer
+from icecream import ic
+
 
 
 def CLIP_loss(logits: torch.Tensor) -> torch.Tensor:
@@ -26,10 +27,10 @@ def CLIP_loss(logits: torch.Tensor) -> torch.Tensor:
     # bring logits to cpu
     logits = logits.to("cpu")
     # Calculate cross entropy losses along axis 0 and 1
-    loss_i = F.cross_entropy(logits.transpose(0, 1), labels, reduction="mean")
-    loss_t = F.cross_entropy(logits, labels, reduction="mean")
+    loss_crystal = F.cross_entropy(logits.transpose(0, 1), labels, reduction="mean")
+    loss_xrd = F.cross_entropy(logits, labels, reduction="mean")
     # Calculate the final loss
-    loss = (loss_i + loss_t) / 2
+    loss = (loss_crystal + loss_xrd) / 2
     return loss
 
 
@@ -44,7 +45,7 @@ def metrics(similarity: torch.Tensor):
 
 
 class Projection(nn.Module):
-    def __init__(self, d_in: int, d_out: int, p: float = 0.5) -> None:
+    def __init__(self, d_in: int, d_out: int, p: float) -> None:
         super().__init__()
         self.linear1 = nn.Linear(d_in, d_out, bias=False)
         self.linear2 = nn.Linear(d_out, d_out, bias=False)
@@ -61,11 +62,14 @@ class Projection(nn.Module):
 class XRDEncoder(nn.Module):
     def __init__(self, cfg) -> None:
         super().__init__()
-        self.base = ByteLatentTransformer(**cfg.blt)
-        self.projection = Projection(cfg.blt.embedding_dim, cfg.clip_hidden_dim)
+        self.base = ByteLatentTransformer(**cfg.xrd_encoder.dict())
+        self.projection = Projection(
+            cfg.xrd_encoder.n_embd, cfg.projection.hidden_dim, cfg.projection.dropout
+        )
 
     def forward(self, x):
         out = self.base(x)
+        out = out.mean(dim=1)
         projected_vec = self.projection(out)
         projection_len = torch.norm(projected_vec, dim=-1, keepdim=True)
         return projected_vec / projection_len
@@ -74,11 +78,16 @@ class XRDEncoder(nn.Module):
 class CrystalEncoder(nn.Module):
     def __init__(self, cfg) -> None:
         super().__init__()
-        self.base = GotenNet(**cfg.gotennet)
-        self.projection = Projection(cfg.gotennet.embedding_dim, cfg.clip_hidden_dim)
+        self.base = GotenNet(**cfg.crystal_encoder.dict())
+        self.projection = Projection(
+            cfg.crystal_encoder.dim, cfg.projection.hidden_dim, cfg.projection.dropout
+        )
 
-    def forward(self, x):
-        projected_vec = self.projection(self.base(x))
+    def forward(self, atom_ids, coordinates, adjacency_matrix):
+        out, _ = self.base(atom_ids, coordinates, adjacency_matrix)
+        ic(out)
+        out = out.mean(dim=1)
+        projected_vec = self.projection(out)
         projection_len = torch.norm(projected_vec, dim=-1, keepdim=True)
         return projected_vec / projection_len
 
@@ -88,14 +97,14 @@ class EyesNetCLIP(nn.Module):
         super().__init__()
         self.xrd_encoder = XRDEncoder(cfg)
         self.crystal_encoder = CrystalEncoder(cfg)
-        self.lr = cfg.learning_rate
+        self.lr = cfg.general.learning_rate
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def forward(self, xrd, crystal):
+    def forward(self, xrd, atom_ids, coordinates, adjacency_matrix):
         xrd_embed = self.xrd_encoder(xrd)
-        crystal_embed = self.crystal_encoder(crystal)
+        crystal_embed = self.crystal_encoder(atom_ids, coordinates, adjacency_matrix)
         similarity = xrd_embed @ crystal_embed.T
 
         loss = CLIP_loss(similarity)
-        img_acc, cap_acc = metrics(similarity)
-        return loss, img_acc, cap_acc
+        crystal_acc, xrd_acc = metrics(similarity)
+        return loss, crystal_acc, xrd_acc

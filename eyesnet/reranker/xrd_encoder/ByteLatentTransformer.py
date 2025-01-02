@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import math
 
 class LayerNorm(nn.Module):
     """Custom Layer Normalization."""
@@ -209,7 +209,7 @@ class ByteLatentTransformer(nn.Module):
             n_embd, n_head, n_layers_latent, dropout
         )
         self.pos_embedding = nn.Parameter(
-            torch.zeros(1, block_size // patch_size, n_embd)
+            torch.zeros(1, math.ceil(block_size / patch_size), n_embd)
         )
         self.apply(self._init_weights)
 
