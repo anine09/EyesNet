@@ -137,10 +137,29 @@ for epoch in tqdm(range(config.general.num_epochs), desc="Epoch Progress", posit
             xrd = xrd.to(device)
             crystal = crystal.to(device)
             loss, _, _ = model(xrd=xrd, crystal=crystal)
+            
+            # 检查 loss 是否为 NaN
+            if torch.isnan(loss):
+                logger.error(f"Epoch {epoch+1}\tLoss is nan, skipping batch.")
+                continue
+            
+            # 更新进度条显示当前 batch 的 loss
+            tqdm.write(f"Batch Loss: {loss.item():.4f}")  # 打印到控制台
+            tqdm.set_postfix(loss=loss.item())  # 更新进度条显示
+
             train_loss += loss.item()
+        
         scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+        
+        # 检查梯度是否为 NaN
+        for param in model.parameters():
+            if param.grad is not None and torch.isnan(param.grad).any():
+                logger.error(f"Epoch {epoch+1}\tGradient is nan, skipping batch.")
+                optimizer.zero_grad()  # 清除梯度
+                break
+        else:
+            scaler.step(optimizer)
+            scaler.update()
 
     scheduler.step()
 
@@ -158,6 +177,12 @@ for epoch in tqdm(range(config.general.num_epochs), desc="Epoch Progress", posit
             xrd = xrd.to(device)
             crystal = crystal.to(device)
             loss, crystal_acc, xrd_acc = model(xrd=xrd, crystal=crystal)
+            
+            # 检查 validation loss 是否为 NaN
+            if torch.isnan(loss):
+                logger.error(f"Epoch {epoch+1}\tValidation loss is nan, skipping batch.")
+                continue
+            
             val_loss += loss.item()
             crystal_test_accs.append(crystal_acc)
             xrd_test_accs.append(xrd_acc)
