@@ -78,7 +78,7 @@ class Config(BaseModel):
     projection: ProjectionConfig
 
 
-with open("config.toml", "r") as f:
+with open("config.toml", "rb") as f:
     config = tomllib.load(f)
 config = Config(**config)
 
@@ -108,10 +108,6 @@ optimizer = optim.AdamW(
             "weight_decay": config.general.weight_decay,
         },
         {"params": model.logit_scale, "weight_decay": 0.0},
-        {
-            "params": model.projection.parameters(),
-            "weight_decay": config.general.weight_decay,
-        },
     ],
     lr=config.general.learning_rate,
 )
@@ -162,7 +158,6 @@ for epoch in tqdm(range(config.general.num_epochs), desc="Epoch Progress", posit
         scaler.scale(loss).backward()
 
         grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        logger.debug(f"Gradient norm: {grad_norm}")
 
         # Unscales gradients and calls optimizer.step()
         scaler.step(optimizer)
