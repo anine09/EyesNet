@@ -97,6 +97,7 @@ class EyesNetCLIP(nn.Module):
         super().__init__()
         self.xrd_encoder = XRDEncoder(cfg)
         self.crystal_encoder = CrystalEncoder(cfg)
+        self.logit_scale = nn.Parameter(torch.ones([]) * torch.tensor(1.0 / 0.07).log())
         self.lr = cfg.general.learning_rate
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -104,6 +105,8 @@ class EyesNetCLIP(nn.Module):
         xrd_embed = self.xrd_encoder(xrd)
         crystal_embed = self.crystal_encoder(crystal)
         similarity = xrd_embed @ crystal_embed.T
+        logit_scale = self.logit_scale.exp()
+        similarity = similarity * logit_scale
         loss = CLIP_loss(similarity)
         
         crystal_acc, xrd_acc = metrics(similarity)
