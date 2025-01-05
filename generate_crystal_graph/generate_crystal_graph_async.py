@@ -5,13 +5,13 @@ from itertools import islice
 from tqdm import tqdm
 import orjson
 from pymatgen.core import Structure
+from icecream import ic
 
 # 添加自定义模块路径
 sys.path.insert(0, "/home/lxt/EyesNet/")
 from eyesnet.reranker.crystal_encoder.Structure2Graph import (
-    get_adjacency_matrix,
-    get_atom_ids,
-    get_coordinates,
+    get_gotennet_atomic_numbers,
+    get_gotennet_pos,
 )
 
 # 更高效的文件遍历方法
@@ -22,13 +22,12 @@ def generate_crystal_graph(file_path):
     with open(file_path, "rb") as f:
         data = orjson.loads(f.read())
     crystal_structure = Structure.from_str(data["structure"], fmt="json")
-    atom_ids = get_atom_ids(crystal_structure)
-    coordinates = get_coordinates(crystal_structure)
-    adjacency_matrix = get_adjacency_matrix(crystal_structure)
+
+    atomic_numbers = get_gotennet_atomic_numbers(crystal_structure)
+    pos = get_gotennet_pos(crystal_structure)
     crystal_data = {
-        "atom_ids": atom_ids,
-        "coordinates": coordinates,
-        "adjacency_matrix": adjacency_matrix,
+        "atomic_numbers": atomic_numbers,
+        "pos": pos,
     }
     data["crystal_graph"] = crystal_data
     return data

@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from gotennet_pytorch import GotenNet
+from crystal_encoder.gotennet import GotenNet
+from torch_geometric.nn import global_mean_pool
 from xrd_encoder.ByteLatentTransformer import ByteLatentTransformer
 from icecream import ic
 
@@ -80,13 +81,12 @@ class CrystalEncoder(nn.Module):
         super().__init__()
         self.base = GotenNet(**cfg.crystal_encoder.dict())
         self.projection = Projection(
-            cfg.crystal_encoder.dim, cfg.projection.hidden_dim, cfg.projection.dropout
+            cfg.crystal_encoder.n_atom_basis, cfg.projection.hidden_dim, cfg.projection.dropout
         )
 
-    def forward(self, atom_ids, coordinates, adjacency_matrix):
-        out, _ = self.base(atom_ids, coordinates, adjacency_matrix)
-        ic(out)
-        out = out.mean(dim=1)
+    def forward(self, crystal):
+        out, _ = self.base(crystal)
+        out = global_mean_pool(out, crystal.batch)
         projected_vec = self.projection(out)
         projection_len = torch.norm(projected_vec, dim=-1, keepdim=True)
         return projected_vec / projection_len
@@ -100,11 +100,11 @@ class EyesNetCLIP(nn.Module):
         self.lr = cfg.general.learning_rate
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def forward(self, xrd, atom_ids, coordinates, adjacency_matrix):
+    def forward(self, xrd, crystal):
         xrd_embed = self.xrd_encoder(xrd)
-        crystal_embed = self.crystal_encoder(atom_ids, coordinates, adjacency_matrix)
+        crystal_embed = self.crystal_encoder(crystal)
         similarity = xrd_embed @ crystal_embed.T
-
         loss = CLIP_loss(similarity)
+        
         crystal_acc, xrd_acc = metrics(similarity)
         return loss, crystal_acc, xrd_acc
