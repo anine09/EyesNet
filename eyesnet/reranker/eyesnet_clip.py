@@ -8,6 +8,7 @@ from icecream import ic
 
 
 
+
 def CLIP_loss(logits: torch.Tensor) -> torch.Tensor:
     """
     Calculate a custom cross-entropy loss.
