@@ -23,13 +23,14 @@ hash_table_size = 500  # Size of each hash table
 dim = 256
 max_degree = 2
 # max_neighbors = 12
-depth = 2
+depth = 5
 heads = 2
 dim_head = 32
 dim_edge_refinement = 256
 num_atoms = 500
 return_coors = false
 cutoff_radius = 5
+ff_kwargs.layernorm_input = true
 
 
 [projection]
