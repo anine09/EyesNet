@@ -1,11 +1,9 @@
 import sys
-# sys.path.insert(0, "/home/lxt/EyesNet/GSAS-II/GSASII")
-sys.path.insert(0, "/home/lxt/EyesNet/gsas2full/GSAS-II/GSASII")
+sys.path.insert(0, "/home/lxt/EyesNet/GSAS-II/GSASII")
 import GSASIIscriptable as G2sc
 from monty.serialization import loadfn
 import json
 from icecream import ic
-# from rich.progress import track
 from tqdm import tqdm
 import os
 
@@ -59,7 +57,6 @@ if __name__ == "__main__":
             if material_id in file_names:
                 continue
             formula_pretty = doc["formula_pretty"]
-            # symmetry = doc["symmetry"]
             structure = doc["structure"]
             cif_info = structure.to(CIF_PATH)
             XRD_simulation = gen_xrd()
@@ -67,7 +64,6 @@ if __name__ == "__main__":
             info = {
                 "material_id": material_id,
                 "formula_pretty": formula_pretty,
-                # "symmetry":symmetry,
                 "structure":structure.to_json(),
                 "CIF_info": cif_info,
                 "XRD_simulation": XRD_simulation.tolist(),
