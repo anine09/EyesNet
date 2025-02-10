@@ -1,12 +1,14 @@
 [general]
 dataset_path = "/home/lxt/EyesNet/dataset/crystal_graph"
 learning_rate = 1e-4
-batch_size = 8
+batch_size = 4
 num_epochs = 400
-weight_decay = 1e-4
-warmup_epochs = 10
-patience = 10
-cuda_device = 1
+weight_decay = 0.01
+warmup_steps = 10000
+lr_decay = 0.8
+patience = 15
+nan_patience = 3
+gradient_clipping = 10.0
 
 [xrd_encoder]
 block_size = 3501
@@ -15,7 +17,7 @@ n_embd = 256              # Embedding dimension
 n_head = 8                # Number of attention heads
 n_layers_encoder = 2      # lE << lG # Number of layers in the encoder
 n_layers_latent = 4       # lG # Number of layers in the latent transformer
-dropout = 0.3
+dropout = 0.1
 vocab_size = 10001        # Number of unique bytes
 hash_sizes = [3, 4, 5, 6] # n-gram sizes
 hash_table_size = 500     # Size of each hash table
@@ -26,13 +28,13 @@ hash_table_size = 500     # Size of each hash table
 n_atom_basis = 256
 n_interactions = 8
 radial_basis = "BesselBasis"
-n_rbf = 20
+n_rbf = 64
 cutoff = 5.0
 max_z = 100
 epsilon = 1e-8
 max_num_neighbors = 32
 num_heads = 8
-attn_dropout = 0.3
+attn_dropout = 0.1
 edge_updates = true
 scale_edge = true
 lmax = 2
@@ -41,4 +43,4 @@ sep_int_vec = true
 
 [projection]
 hidden_dim = 128
-dropout = 0.3
+dropout = 0.1

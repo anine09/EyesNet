@@ -9,9 +9,9 @@ from torch_geometric.nn import MessagePassing
 from torch_geometric.typing import OptTensor
 from torch_geometric.utils import scatter
 
-from crystal_encoder.gotennet_ops import Dense, str2basis, get_weight_init_by_string, str2act, MLP, Distance, CosineCutoff, \
+from .gotennet_ops import Dense, str2basis, get_weight_init_by_string, str2act, MLP, Distance, CosineCutoff, \
     VecLayerNorm
-from crystal_encoder.gotennet_ops import parse_update_info, TensorInit, NodeInit, EdgeInit
+from .gotennet_ops import parse_update_info, TensorInit, NodeInit, EdgeInit
 
 # num_nodes and hidden_dims are placeholder values, will be overwritten by actual data
 num_nodes = hidden_dims = 1
